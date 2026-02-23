@@ -4,158 +4,49 @@
 <meta charset="UTF-8">
 <title>P2P Cyber Chat</title>
 <style>
-    /* --- Your Provided Theme Styles --- */
     body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       font-family: 'Segoe UI', Arial, sans-serif;
       background: linear-gradient(135deg, #1e1e2f, #3a3a5a);
-      background-repeat: no-repeat;
-      background-size: cover;
-      background-attachment: fixed;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      overflow-x: hidden;
+      background-repeat: no-repeat; background-size: cover; background-attachment: fixed;
+      color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
     }
 
-    h2 {
-      font-size: 2rem;
-      margin: 20px 0 10px 0;
-      opacity: 0.9;
-      text-shadow: 0 0 10px rgba(255,255,255,0.2);
-    }
+    h2 { font-size: 2rem; margin: 20px 0 10px 0; opacity: 0.9; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
-    /* --- Chat Layout Containers --- */
-    .main-container {
-      width: 90vw;
-      max-width: 1000px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
+    .main-container { width: 90vw; max-width: 1000px; display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
 
-    /* Glassmorphism Panel Style */
     .glass-panel {
-      background-color: #ffffff11;
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid #ffffff22;
-      padding: 20px;
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      background-color: #ffffff11; border-radius: 15px; backdrop-filter: blur(10px);
+      border: 1px solid #ffffff22; padding: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }
 
-    /* --- Peer List Styling --- */
-    #peers {
-      max-height: 150px;
-      overflow-y: auto;
-    }
-    #peerList {
-      list-style: none;
-      padding: 0;
-      margin: 10px 0 0 0;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 10px;
-    }
+    #peers { max-height: 150px; overflow-y: auto; }
+    #peerList { list-style: none; padding: 0; margin: 10px 0 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    
     #peerList li {
-      background: #ffffff11;
-      padding: 10px 15px;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      transition: 0.3s;
-      border: 1px solid transparent;
+      background: #ffffff11; padding: 10px 15px; border-radius: 8px; display: flex;
+      justify-content: space-between; align-items: center; cursor: pointer; transition: 0.3s;
     }
-    #peerList li:hover {
-      background: #ffffff22;
-      transform: translateY(-2px);
-    }
-    .connected-peer {
-      border-color: #4CAF50 !important;
-      background: rgba(76, 175, 80, 0.2) !important;
-      font-weight: bold;
-    }
+    #peerList li:hover { background: #ffffff22; transform: translateY(-2px); }
+    .connected-peer { border: 1px solid #4CAF50 !important; background: rgba(76, 175, 80, 0.2) !important; }
 
-    /* --- Messages Box (Larger) --- */
     #messages {
-      height: 450px; /* Much larger */
-      overflow-y: auto;
-      padding: 15px;
-      margin-bottom: 15px;
-      background: rgba(0,0,0,0.2);
-      border-radius: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      height: 450px; overflow-y: auto; padding: 15px; margin-bottom: 15px;
+      background: rgba(0,0,0,0.2); border-radius: 10px; display: flex; flex-direction: column; gap: 8px;
     }
-    #messages div {
-      padding: 8px 12px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.05);
-      width: fit-content;
-      max-width: 80%;
-    }
+    #messages div { padding: 8px 12px; border-radius: 18px; background: rgba(255,255,255,0.05); width: fit-content; max-width: 80%; }
 
-    /* --- Controls & Inputs --- */
-    .input-area {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-    input[type="text"] {
-      flex-grow: 1;
-      padding: 12px 20px;
-      border-radius: 50px;
-      border: none;
-      background: rgba(255,255,255,0.1);
-      color: white;
-      outline: none;
-      font-size: 1rem;
-    }
-    input[type="text"]:focus {
-      background: rgba(255,255,255,0.15);
-      box-shadow: 0 0 10px rgba(255,255,255,0.1);
-    }
+    .input-area { display: flex; gap: 10px; align-items: center; }
+    input[type="text"] { flex-grow: 1; padding: 12px 20px; border-radius: 50px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; }
 
-    /* Buttons Style */
-    button {
-      padding: 10px 20px;
-      border-radius: 50px;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      transition: 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
+    button { padding: 10px 20px; border-radius: 50px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
     #send { background: #4CAF50; color: white; }
-    #send:hover { background: #45a049; transform: scale(1.05); }
-    
     .file-btn { background: #ff9900; color: white; }
-    .file-btn:hover { background: #ffb84d; transform: scale(1.05); }
-
-    .disconnect-btn {
-      background: #e74c3c;
-      color: white;
-      padding: 4px 10px;
-      font-size: 0.75rem;
-      border-radius: 4px;
-    }
-    
+    .disconnect-btn { background: #e74c3c; color: white; padding: 4px 10px; font-size: 0.75rem; border-radius: 4px; }
     #leaveAll { background: #333; color: white; }
-    #leaveAll:hover { background: #444; }
 
-    /* Custom Scrollbar */
     ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
 </style>
 </head>
@@ -187,7 +78,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-/* --- YOUR EXISTING FIREBASE CONFIG --- */
 const firebaseConfig = {
   apiKey: "AIzaSyAN4rqNgFUf_i6HHN6F1nxTiFYGXbB1D28",
   authDomain: "p2p-for-web.firebaseapp.com",
@@ -248,8 +138,7 @@ function renderPeerList() {
       btnContainer.appendChild(btn);
     } else {
       li.onclick = () => {
-        const statusId = `status-${id}`;
-        log(`<b>Connecting to ${allPeers[id].name}...</b>`, statusId);
+        log(`<b>Connecting to ${allPeers[id].name}...</b>`, `status-${id}`);
         startCall(id);
       };
     }
@@ -266,6 +155,7 @@ peersRef.on("value", snap => {
 function disconnectFromPeer(id) {
   const conn = connections[id];
   if (conn) {
+    if (conn.timeout) clearTimeout(conn.timeout);
     if (conn.channel?.readyState === "open") {
       try { conn.channel.send(JSON.stringify({ type: "system-bye" })); } catch(e) {}
     }
@@ -276,18 +166,18 @@ function disconnectFromPeer(id) {
   }
 }
 
-window.onbeforeunload = () => {
-  for (let id in connections) {
-    if (connections[id].channel?.readyState === "open") {
-      connections[id].channel.send(JSON.stringify({ type: "system-bye" }));
-    }
-  }
-  peersRef.child(myId).remove();
-};
-
 function createPeerConnection(peerId) {
   const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-  connections[peerId] = { pc, channel: null };
+  
+  // Set a 15-second timeout for the connection process
+  const connectionTimeout = setTimeout(() => {
+    if (connections[peerId] && (!connections[peerId].channel || connections[peerId].channel.readyState !== "open")) {
+      log(`<b style="color:#e74c3c;">Connection to ${allPeers[peerId]?.name || 'Peer'} timed out.</b>`, `status-${peerId}`);
+      disconnectFromPeer(peerId);
+    }
+  }, 15000);
+
+  connections[peerId] = { pc, channel: null, timeout: connectionTimeout };
   const peerName = allPeers[peerId]?.name || "Peer";
 
   pc.onicecandidate = e => {
@@ -296,6 +186,9 @@ function createPeerConnection(peerId) {
   pc.ondatachannel = e => setupChannel(peerId, e.channel);
   pc.onconnectionstatechange = () => {
     log(`Peer <b>${peerName}</b>: <b>${pc.connectionState}</b>`, `status-${peerId}`);
+    if (pc.connectionState === "connected" && connections[peerId].timeout) {
+        clearTimeout(connections[peerId].timeout);
+    }
     renderPeerList();
   };
   return pc;
@@ -313,9 +206,8 @@ async function startCall(peerId) {
 mySignalsRef.on("child_added", async snap => {
   const { from, offer, answer, candidate } = snap.val();
   snap.ref.remove();
-  const statusId = `status-${from}`;
   if (!connections[from]) {
-    if (offer) log(`<b>Connecting with ${allPeers[from]?.name || "Peer"}...</b>`, statusId);
+    if (offer) log(`<b>Connecting with ${allPeers[from]?.name || "Peer"}...</b>`, `status-${from}`);
     createPeerConnection(from);
   }
   const pc = connections[from].pc;
@@ -335,10 +227,13 @@ function setupChannel(peerId, channel) {
   connections[peerId].channel = channel;
   channel.binaryType = "arraybuffer";
   const peerName = allPeers[peerId]?.name || "Peer";
+  
   channel.onopen = () => {
-    log(`<span style='color:#4CAF50; font-weight:bold;'>CONNECTION ENCRYPTED WITH ${peerName.toUpperCase()}</span>`, `status-${peerId}`);
+    if (connections[peerId].timeout) clearTimeout(connections[peerId].timeout);
+    log(`<span style='color:#4CAF50; font-weight:bold;'>ENCRYPTED WITH ${peerName.toUpperCase()}</span>`, `status-${peerId}`);
     renderPeerList();
   };
+  
   channel.onmessage = e => {
     if (typeof e.data === "string") {
       try {
@@ -350,8 +245,7 @@ function setupChannel(peerId, channel) {
         }
         if (obj.type === "system-bye") {
           log(`<i>${peerName} left.</i>`);
-          if (connections[peerId]) { connections[peerId].pc.close(); delete connections[peerId]; }
-          renderPeerList();
+          disconnectFromPeer(peerId);
           return;
         }
       } catch (err) {}
@@ -366,18 +260,16 @@ function setupChannel(peerId, channel) {
       }
     }
   };
-  channel.onclose = () => { renderPeerList(); };
 }
 
 function processCompletedFile(blob, meta, senderName) {
   const url = URL.createObjectURL(blob);
-  if (meta.mime.startsWith("image/")) {
-    log(`<b>${senderName}:</b><br><img src="${url}" style="max-width:300px; border-radius:8px; border:1px solid #555; margin-top:5px;">`);
-  } else if (meta.mime.startsWith("video/")) {
-    log(`<b>${senderName}:</b><br><video controls style="max-width:300px; border-radius:8px; margin-top:5px;"><source src="${url}" type="${meta.mime}"></video>`);
-  } else {
-    log(`<b>${senderName}:</b> <a href="${url}" download="${meta.name}" style="color:#ff9900">Download ${meta.name}</a>`);
-  }
+  const isImage = meta.mime.startsWith("image/");
+  const isVideo = meta.mime.startsWith("video/");
+  let content = isImage ? `<img src="${url}" style="max-width:300px; border-radius:8px; border:1px solid #555; margin-top:5px;">` :
+                isVideo ? `<video controls style="max-width:300px; border-radius:8px; margin-top:5px;"><source src="${url}" type="${meta.mime}">Fallback</video><br><a href="${url}" download="${meta.name}" style="color:#ff9900; font-size: 0.8rem;">📥 Download ${meta.name}</a>` :
+                `<a href="${url}" download="${meta.name}" style="color:#ff9900">Download ${meta.name}</a>`;
+  log(`<b>${senderName}:</b><br>${content}`);
 }
 
 function broadcast(data) {
@@ -388,7 +280,6 @@ function broadcast(data) {
 
 document.getElementById("send").onclick = sendMessage;
 document.getElementById("msg").onkeypress = e => { if(e.key === "Enter") sendMessage(); };
-
 function sendMessage() {
   const msgInput = document.getElementById("msg");
   const val = msgInput.value.trim();
@@ -404,39 +295,26 @@ document.getElementById("fileInput").onchange = async (e) => {
   const buffer = await file.arrayBuffer();
   broadcast(JSON.stringify({ type: "file-meta", name: file.name, mime: file.type, size: file.size }));
   const chunkSize = 16384;
-  for (let i = 0; i < buffer.byteLength; i += chunkSize) {
-    broadcast(buffer.slice(i, i + chunkSize));
-  }
+  for (let i = 0; i < buffer.byteLength; i += chunkSize) broadcast(buffer.slice(i, i + chunkSize));
   processCompletedFile(new Blob([buffer], {type: file.type}), {mime: file.type, name: file.name}, "You");
   e.target.value = "";
 };
 
-document.getElementById("leaveAll").onclick = () => {
-  if (!confirm("Disconnect from all secure channels?")) return;
-  for (let id in connections) {
-    if (connections[id].channel?.readyState === "open") {
-      try { connections[id].channel.send(JSON.stringify({ type: "system-bye" })); } catch (e) {}
-    }
-    connections[id].pc.close();
-  }
-  connections = {};
-  peersRef.child(myId).remove().then(() => {
-    log("<b style='color:#e74c3c;'>OFFLINE</b>");
-    renderPeerList();
-  });
-};
-// --- Clear Chat Logic ---
 document.getElementById("clearChat").onclick = () => {
-  const logDiv = document.getElementById("messages");
-  
-  // 1. Wipe the UI
-  logDiv.innerHTML = "";
-  
-  // 2. Reset the incoming file buffer just in case a transfer was stuck
+  document.getElementById("messages").innerHTML = "";
   incomingFile = { metadata: null, buffer: [] };
-  
-  // 3. Add a little status tip
   log("<i style='opacity:0.5;'>Chat history cleared locally.</i>");
+};
+
+document.getElementById("leaveAll").onclick = () => {
+  if (!confirm("Disconnect from everyone?")) return;
+  for (let id in connections) disconnectFromPeer(id);
+  peersRef.child(myId).remove().then(() => { log("<b style='color:#e74c3c;'>OFFLINE</b>"); renderPeerList(); });
+};
+
+window.onbeforeunload = () => {
+  for (let id in connections) disconnectFromPeer(id);
+  peersRef.child(myId).remove();
 };
 </script>
 </body>
