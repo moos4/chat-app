@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>P2P Cyber Chat</title>
+<title>P2P Chat App</title>
 <style>
     body {
       margin: 0; padding: 0;
@@ -51,8 +51,8 @@
 </style>
 </head>
 <body>
-
-<h2>Direct P2P CyberChat</h2>
+<audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
+<h2>Direct P2P Chat App</h2>
 <p style="opacity: 0.7;">Logged in as: <span id="myName" style="color:#4CAF50; font-weight:bold;"></span></p>
 
 <div class="main-container">
@@ -90,17 +90,27 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
-const myName = prompt("Enter your name:") || "Anonymous";
-document.getElementById("myName").textContent = myName;
-const myId = Math.random().toString(36).substring(2);
-
 const peersRef = db.ref("peers");
-const mySignalsRef = db.ref("signals/" + myId);
 
+let myName = "";
+let myId = Math.random().toString(36).substring(2);
 let connections = {};
 let allPeers = {};
 let incomingFile = { metadata: null, buffer: [] };
+
+let isTabActive = true;
+window.onfocus = () => { isTabActive = true; document.title = "P2P Cyber Chat"; };
+window.onblur = () => { isTabActive = false; };
+
+function notifyUser() {
+  if (!isTabActive) {
+    // Play sound
+    document.getElementById("notifSound").play().catch(e => console.log("Sound blocked by browser"));
+    
+    // Flash the tab title
+    document.title = "🔴 New Message!";
+  }
+}
 
 const log = (msg, id = null) => {
   const logDiv = document.getElementById("messages");
@@ -115,9 +125,28 @@ const log = (msg, id = null) => {
   logDiv.scrollTop = logDiv.scrollHeight;
 };
 
-peersRef.child(myId).set({ name: myName });
-peersRef.child(myId).onDisconnect().remove();
+// --- Unique Name Login ---
+async function login() {
+  let nameChoice = prompt("Enter your name:");
+  if (!nameChoice) nameChoice = "Anonymous";
 
+  const snapshot = await peersRef.once("value");
+  const currentPeers = snapshot.val() || {};
+  const existingNames = Object.values(currentPeers).map(p => p.name.toLowerCase());
+
+  if (existingNames.includes(nameChoice.toLowerCase())) {
+    alert("That name is already in use. Please pick another one.");
+    return login();
+  }
+
+  myName = nameChoice;
+  document.getElementById("myName").textContent = myName;
+  peersRef.child(myId).set({ name: myName });
+  peersRef.child(myId).onDisconnect().remove();
+  initSignalListener();
+}
+
+// --- Peer List Rendering (Clean Version) ---
 function renderPeerList() {
   const peerListEl = document.getElementById("peerList");
   peerListEl.innerHTML = "";
@@ -128,7 +157,9 @@ function renderPeerList() {
     const isConnected = conn && conn.channel?.readyState === "open";
     if (isConnected) li.className = "connected-peer";
     
+    // IDs removed, showing only Name and Active status
     li.innerHTML = `<span>${allPeers[id].name}${isConnected ? " (Active)" : ""}</span>`;
+
     const btnContainer = document.createElement("div");
     if (isConnected) {
       const btn = document.createElement("button");
@@ -168,8 +199,6 @@ function disconnectFromPeer(id) {
 
 function createPeerConnection(peerId) {
   const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-  
-  // Set a 15-second timeout for the connection process
   const connectionTimeout = setTimeout(() => {
     if (connections[peerId] && (!connections[peerId].channel || connections[peerId].channel.readyState !== "open")) {
       log(`<b style="color:#e74c3c;">Connection to ${allPeers[peerId]?.name || 'Peer'} timed out.</b>`, `status-${peerId}`);
@@ -203,25 +232,27 @@ async function startCall(peerId) {
   db.ref("signals/" + peerId).push({ from: myId, offer: offer });
 }
 
-mySignalsRef.on("child_added", async snap => {
-  const { from, offer, answer, candidate } = snap.val();
-  snap.ref.remove();
-  if (!connections[from]) {
-    if (offer) log(`<b>Connecting with ${allPeers[from]?.name || "Peer"}...</b>`, `status-${from}`);
-    createPeerConnection(from);
-  }
-  const pc = connections[from].pc;
-  if (offer) {
-    await pc.setRemoteDescription(new RTCSessionDescription(offer));
-    const myAnswer = await pc.createAnswer();
-    await pc.setLocalDescription(myAnswer);
-    db.ref("signals/" + from).push({ from: myId, answer: myAnswer });
-  } else if (answer) {
-    await pc.setRemoteDescription(new RTCSessionDescription(answer));
-  } else if (candidate) {
-    await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => {});
-  }
-});
+function initSignalListener() {
+  db.ref("signals/" + myId).on("child_added", async snap => {
+    const { from, offer, answer, candidate } = snap.val();
+    snap.ref.remove();
+    if (!connections[from]) {
+      if (offer) log(`<b>Connecting with ${allPeers[from]?.name || "Peer"}...</b>`, `status-${from}`);
+      createPeerConnection(from);
+    }
+    const pc = connections[from].pc;
+    if (offer) {
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      const myAnswer = await pc.createAnswer();
+      await pc.setLocalDescription(myAnswer);
+      db.ref("signals/" + from).push({ from: myId, answer: myAnswer });
+    } else if (answer) {
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
+    } else if (candidate) {
+      await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(e => {});
+    }
+  });
+}
 
 function setupChannel(peerId, channel) {
   connections[peerId].channel = channel;
@@ -249,6 +280,7 @@ function setupChannel(peerId, channel) {
           return;
         }
       } catch (err) {}
+      notifyUser();
       log(`<b>${peerName}:</b> ${e.data}`);
     } else {
       incomingFile.buffer.push(e.data);
@@ -280,6 +312,7 @@ function broadcast(data) {
 
 document.getElementById("send").onclick = sendMessage;
 document.getElementById("msg").onkeypress = e => { if(e.key === "Enter") sendMessage(); };
+
 function sendMessage() {
   const msgInput = document.getElementById("msg");
   const val = msgInput.value.trim();
@@ -289,16 +322,30 @@ function sendMessage() {
   msgInput.value = "";
 }
 
-document.getElementById("fileInput").onchange = async (e) => {
-  const file = e.target.files[0];
+async function handleFile(file) {
   if (!file) return;
   const buffer = await file.arrayBuffer();
   broadcast(JSON.stringify({ type: "file-meta", name: file.name, mime: file.type, size: file.size }));
   const chunkSize = 16384;
   for (let i = 0; i < buffer.byteLength; i += chunkSize) broadcast(buffer.slice(i, i + chunkSize));
   processCompletedFile(new Blob([buffer], {type: file.type}), {mime: file.type, name: file.name}, "You");
+}
+
+document.getElementById("fileInput").onchange = (e) => {
+  handleFile(e.target.files[0]);
   e.target.value = "";
 };
+
+document.getElementById("msg").addEventListener("paste", async (e) => {
+  const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+  for (let item of items) {
+    if (item.kind === 'file') {
+      e.preventDefault();
+      handleFile(item.getAsFile());
+      log(`<i style="opacity:0.5;">Uploading pasted file...</i>`);
+    }
+  }
+});
 
 document.getElementById("clearChat").onclick = () => {
   document.getElementById("messages").innerHTML = "";
@@ -309,13 +356,18 @@ document.getElementById("clearChat").onclick = () => {
 document.getElementById("leaveAll").onclick = () => {
   if (!confirm("Disconnect from everyone?")) return;
   for (let id in connections) disconnectFromPeer(id);
-  peersRef.child(myId).remove().then(() => { log("<b style='color:#e74c3c;'>OFFLINE</b>"); renderPeerList(); });
+  peersRef.child(myId).remove().then(() => {
+    log("<b style='color:#e74c3c;'>OFFLINE</b>");
+    renderPeerList();
+  });
 };
 
 window.onbeforeunload = () => {
   for (let id in connections) disconnectFromPeer(id);
   peersRef.child(myId).remove();
 };
+
+login();
 </script>
 </body>
 </html>
