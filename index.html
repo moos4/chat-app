@@ -115,6 +115,17 @@
       70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
       100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
     }
+    
+    #typingIndicator {
+      height: 20px;
+      font-size: 0.85rem;
+      font-style: italic;
+      color: #4CAF50;
+      margin-top: -10px;
+      margin-bottom: 5px;
+      padding-left: 10px;
+      opacity: 0.8;
+    }
 </style>
 </head>
 <body>
@@ -131,6 +142,7 @@
 
     <div class="glass-panel">
         <div id="messages"></div>
+        <div id="typingIndicator"></div>
         <div class="input-area">
             <textarea id="msg" placeholder="Type a secure message..." rows="1" style="flex-grow: 1; padding: 12px 20px; border-radius: 15px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; resize: none; font-family: inherit;"></textarea>
             <button id="send">Send</button>
@@ -290,6 +302,17 @@ msgInput.addEventListener("input", function() {
   this.style.height = 'auto';
   this.style.height = (this.scrollHeight - 24) + 'px';
   if (this.scrollHeight > 200) this.style.overflowY = "auto";
+});
+
+let lastTypingSent = 0;
+
+msgInput.addEventListener("input", () => {
+  const now = Date.now();
+  // Only send the "typing" signal once every 2 seconds so we don't spam
+  if (now - lastTypingSent > 5000) {
+    broadcast(JSON.stringify({ type: "system-typing" }));
+    lastTypingSent = now;
+  }
 });
 
 // --- Advanced Link Detection ---
@@ -566,6 +589,23 @@ function setupChannel(peerId, channel) {
           disconnectFromPeer(peerId);
           return;
         }
+        if (obj.type === "system-typing") {
+          const indicator = document.getElementById("typingIndicator");
+          indicator.textContent = `${peerName} is typing...`;
+          if (connections[peerId].typingTimeout) clearTimeout(connections[peerId].typingTimeout);
+          connections[peerId].typingTimeout = setTimeout(() => {
+            indicator.textContent = "";
+          }, 3000);
+          return; // STOP here so it doesn't log the JSON
+        }
+
+        // ADD THIS: Handle Typing Stop
+        if (obj.type === "system-typing-stop") {
+          const indicator = document.getElementById("typingIndicator");
+          indicator.textContent = ""; // Clear immediately
+          if (connections[peerId].typingTimeout) clearTimeout(connections[peerId].typingTimeout);
+          return; // STOP here so it doesn't log the JSON
+        }
       } catch (err) {
         // Not JSON, continue to text processing
       }
@@ -643,13 +683,16 @@ document.getElementById("send").onclick = sendMessage;
 function sendMessage() {
   const text = msgInput.value.trim();
   if (!text) return;
+  broadcast(JSON.stringify({ type: "system-typing-stop" }));
   broadcast(text);
-
+  
   const safeText = applyMarkdown(escapeHTML(text));
   log({ html: `<b>You:</b> ${linkify(safeText)}` }, null, false);
   
   msgInput.value = "";
   msgInput.style.height = 'auto'; // Reset height
+  
+  lastTypingSent = 0;
 }
 
 async function handleFile(file) {
@@ -708,8 +751,8 @@ login();
 
 // links X
 // embeds X
-// @ requests ?
-// typing.....
+// @ requests X
+// typing... X
 </script>
 </body>
 </html>
