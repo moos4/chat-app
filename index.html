@@ -573,7 +573,8 @@ document.getElementById("leaveAll").onclick = () => {
   if (!confirm("Disconnect from everyone?")) return;
   for (let id in connections) disconnectFromPeer(id);
   peersRef.child(myId).remove().then(() => {
-    log("<b style='color:#e74c3c;'>OFFLINE</b>");
+    log({ html: "<b style='color:#e74c3c;'>OFFLINE</b>"});
+    
     renderPeerList();
   });
 };
