@@ -583,6 +583,7 @@ function setupChannel(peerId, channel) {
           loudSound.volume = 1.0;
           loudSound.play().catch(() => {});
         }
+        document.title = "🔴 New Mention!";
         
         // Always trigger a desktop notification for mentions
         if (desktopNotificationsEnabled && Notification.permission === "granted") {
@@ -707,8 +708,8 @@ login();
 
 // links X
 // embeds X
-// @ requests X
-// typing..... ?
+// @ requests ?
+// typing.....
 </script>
 </body>
 </html>
