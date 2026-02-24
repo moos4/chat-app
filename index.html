@@ -298,7 +298,7 @@ function disconnectFromPeer(id) {
     }
     conn.pc.close();
     delete connections[id];
-    log(`<i>Disconnected from ${allPeers[id]?.name || "peer"}</i>`);
+    log({ html: `<i>Disconnected from ${allPeers[id]?.name || "peer"}</i>` });
     renderPeerList();
   }
 }
