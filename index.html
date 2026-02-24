@@ -108,7 +108,7 @@
 </head>
 <body>
 <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
-<h2>Direct P2P Chat App</h2>
+<h2>Direct P2P Chat App (NEW TEST)</h2>
 <p style="opacity: 0.7;">Logged in as: <span id="myName" style="color:#4CAF50; font-weight:bold;"></span></p>
 
 <div class="main-container">
@@ -201,24 +201,21 @@ notifCheck.onchange = async () => {
 
 
 function notifyUser(senderName, messageText) {
-  console.log("Notify Triggered. TabActive:", isTabActive, "Enabled:", desktopNotificationsEnabled, "Permission:", Notification.permission);
-  // Only notify if the user is NOT looking at the tab
   if (!isTabActive) {
-    // 1. Play the notification sound
+    // Sound
     const sound = document.getElementById("notifSound");
     if (sound) sound.play().catch(() => {});
 
-    // 2. Flash the tab title
+    // Tab Flash
     document.title = "🔴 New Message!";
 
-    // 3. Desktop Notification (if the switch is ON)
+    // Desktop Popup
     if (desktopNotificationsEnabled && Notification.permission === "granted") {
-      const n = new Notification(`Message from ${senderName}`, {
-        body: messageText.length > 100 ? messageText.substring(0, 97) + "..." : messageText,
+      const n = new Notification(`P2P: ${senderName}`, {
+        body: messageText.length > 80 ? messageText.substring(0, 77) + "..." : messageText,
         icon: "https://cdn-icons-png.flaticon.com/512/733/733585.png"
       });
       
-      // Focus the tab when the notification is clicked
       n.onclick = () => {
         window.focus();
         n.close();
@@ -410,26 +407,53 @@ function disconnectFromPeer(id) {
 
 // --- WebRTC Core ---
 function createPeerConnection(peerId) {
-  const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+  /*
+  const pc = new RTCPeerConnection({
+    iceServers: [
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun1.l.google.com:19302" }, // Backup STUN
+      {
+        urls: "turn:relay.metered.ca:80?transport=tcp",
+        username: "6f6c5c3e0f945ec81eda71b7", // REPLACE with your private Metered username
+        credential: "DxfCox0lm/bNgDcG" // REPLACE with your private Metered credential
+      }
+    ]
+  });*/
+  const pc = new RTCPeerConnection({
+    iceServers: [
+      {
+        // Use TURNS (Secure) over 443.
+        // This is the hardest for school firewalls to block.
+        urls: "turns:global.relay.metered.ca:443?transport=tcp",
+        username: "6f6c5c3e0f945ec81eda71b7",
+        credential: "DxfCox0lm/bNgDcG"
+      }
+    ],
+    // This forces the 'Relay' candidate and ignores local/STUN candidates
+    iceTransportPolicy: "relay"
+  });
   
+  // Increase timeout to 20s for slow school networks
   const connectionTimeout = setTimeout(() => {
     if (connections[peerId] && (!connections[peerId].channel || connections[peerId].channel.readyState !== "open")) {
-      log(`<b style="color:#e74c3c;">Timeout connecting to ${allPeers[peerId]?.name || 'Peer'}</b>`, `status-${peerId}`);
+      log({ html: `<b style="color:#e74c3c;">Connection Failed: Firewall blocked P2P for ${allPeers[peerId]?.name || 'Peer'}</b>` }, `status-${peerId}`);
       disconnectFromPeer(peerId);
     }
-  }, 15000);
+  }, 20000);
 
   connections[peerId] = { pc, channel: null, timeout: connectionTimeout };
   
   pc.onicecandidate = e => {
     if (e.candidate) db.ref("signals/" + peerId).push({ from: myId, candidate: e.candidate.toJSON() });
   };
+  
   pc.ondatachannel = e => setupChannel(peerId, e.channel);
+  
   pc.onconnectionstatechange = () => {
     if (pc.connectionState === "connected" && connections[peerId].timeout) {
         clearTimeout(connections[peerId].timeout);
     }
-    if (pc.connectionState === "disconnected" || pc.connectionState === "failed" || pc.connectionState === "closed") {
+    if (["disconnected", "failed", "closed"].includes(pc.connectionState)) {
         disconnectFromPeer(peerId);
     }
     renderPeerList();
@@ -573,8 +597,7 @@ document.getElementById("leaveAll").onclick = () => {
   if (!confirm("Disconnect from everyone?")) return;
   for (let id in connections) disconnectFromPeer(id);
   peersRef.child(myId).remove().then(() => {
-    log({ html: "<b style='color:#e74c3c;'>OFFLINE</b>"});
-    
+    log("<b style='color:#e74c3c;'>OFFLINE</b>");
     renderPeerList();
   });
 };
