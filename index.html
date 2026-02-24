@@ -274,7 +274,7 @@ function applyMarkdown(text) {
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(/__(.*?)__/g, '<u>$1</u>')
     .replace(/~~(.*?)~~/g, '<del>$1</del>')
-    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/`([\s\S]*?)`/g, '<pre><code>$1</code></pre>')
     
     //.replace(/\((.*?)\)/g, '<button>$1</button>')
     
