@@ -108,7 +108,7 @@
 </head>
 <body>
 <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
-<h2>Direct P2P Chat App (NEW TEST)</h2>
+<h2>Direct P2P Chat App</h2>
 <p style="opacity: 0.7;">Logged in as: <span id="myName" style="color:#4CAF50; font-weight:bold;"></span></p>
 
 <div class="main-container">
@@ -281,19 +281,56 @@ msgInput.addEventListener("input", function() {
 });
 
 // --- Advanced Link Detection ---
+
 function linkify(text) {
-  // Regex for URLs with common TLDs
-  const urlRegex = /((https?:\/\/)|(www\.))?([a-zA-Z0-9-]+\.)+(com|net|org|nl|eu|uk|de|io|edu|gov|me|ai|biz|shop|store|xyz|co)([/\w\.-]*)*(\?[^?\s]*)?(#[^\s]*)?/gi;
+  const urlRegex = /((https?:\/\/)|(www\.))?([a-zA-Z0-9-]+\.)+(com|net|org|nl|eu|uk|de|io|be|edu|gov|me|ai|biz|shop|store|xyz|co)([/\w\.-]*)*(\?[^?\s]*)?(#[^\s]*)?/gi;
 
   return text.replace(urlRegex, (url) => {
     let href = url;
     if (!href.match(/^https?:\/\//i)) {
       href = 'https://' + href;
     }
-    return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color: #4CAF50; text-decoration: underline; font-weight: bold;">${url}</a>`;
+
+    const lowerHref = href.toLowerCase();
+    let embedHtml = '';
+
+    // 1. Image Embeds
+    if (lowerHref.match(/\.(jpeg|jpg|gif|png|webp)$/)) {
+      embedHtml = `<br><img src="${href}" style="max-width: 100%; max-height: 300px; border-radius: 10px; margin-top: 10px; display: block;" onerror="this.style.display='none'">`;
+    }
+    // 2. YouTube Embeds (Regular and Shorts)
+    else if (lowerHref.includes("youtube.com") || lowerHref.includes("youtu.be")) {
+      let videoId = "";
+      
+      if (lowerHref.includes("shorts/")) {
+        videoId = href.split('shorts/')[1].split(/[?#]/)[0];
+      } else if (lowerHref.includes("v=")) {
+        videoId = href.split('v=')[1].split('&')[0];
+      } else if (lowerHref.includes("youtu.be/")) {
+        videoId = href.split('/').pop().split(/[?#]/)[0];
+      }
+
+      if (videoId) {
+        // We use youtube-nocookie.com to bypass school filters and privacy blocks
+        // We also add ?rel=0 to show related videos only from the same channel
+        const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`;
+        
+        // Dynamic sizing: Shorts get vertical, others get horizontal
+        const isShort = lowerHref.includes("shorts/");
+        const width = isShort ? "315" : "100%";
+        const height = isShort ? "560" : "315";
+
+        embedHtml = `<br><iframe width="${width}" height="${height}" src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:10px; margin-top:10px; max-width:100%;"></iframe>`;
+      }
+    }
+    // 3. Raw Video Embeds
+    else if (lowerHref.match(/\.(mp4|webm|ogg)$/)) {
+      embedHtml = `<br><video controls style="max-width: 100%; border-radius: 10px; margin-top: 10px;"><source src="${href}">Your browser does not support the video tag.</video>`;
+    }
+
+    return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color: #4CAF50; text-decoration: underline; font-weight: bold;">${url}</a>${embedHtml}`;
   });
 }
-
 // --- Updated Log Function ---
 const log = (msg, id = null) => {
   const logDiv = document.getElementById("messages");
