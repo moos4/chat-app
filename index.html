@@ -165,7 +165,7 @@
         <div class="input-area">
             <textarea id="msg" placeholder="Type a secure message..." rows="1" style="flex-grow: 1; padding: 12px 20px; border-radius: 15px; border: none; background: rgba(255,255,255,0.1); color: white; outline: none; resize: none; font-family: inherit;"></textarea>
             <button id="send">Send</button>
-            <input type="file" id="fileInput" style="display:none">
+            <input type="file" id="fileInput" style="display:none" multiple>
             <button class="file-btn" onclick="document.getElementById('fileInput').click()">📎 File</button>
             <button id="clearChat" style="background: rgba(255,255,255,0.1); color: white;">🗑️ Clear</button>
             <button id="leaveAll">🚪 Leave</button>
@@ -378,7 +378,7 @@ function linkify(text) {
       }
     }
     // 3. Raw Video Embeds
-    else if (lowerHref.match(/\.(mp4|webm|ogg)$/)) {
+    else if (lowerHref.match(/\.(mp4|webm|ogg|mov)$/)) {
       embedHtml = `<br><video controls style="max-width: 100%; border-radius: 10px; margin-top: 10px;"><source src="${href}">Your browser does not support the video tag.</video>`;
     }
 
@@ -601,7 +601,7 @@ function setupChannel(peerId, channel) {
         const obj = JSON.parse(e.data);
         if (obj.type === "file-meta") {
           incomingFile = { metadata: obj, buffer: [] };
-          log(`<i>Receiving: ${obj.name}</i>`);
+          log({ html: `<i>Receiving: ${obj.name}</i>` });
           return;
         }
         if (obj.type === "system-bye") {
@@ -724,7 +724,9 @@ async function handleFile(file) {
 }
 
 document.getElementById("fileInput").onchange = (e) => {
-  handleFile(e.target.files[0]);
+  for (i in e.target.files) {
+    handleFile(e.target.files[i]);
+  }
   e.target.value = "";
 };
 
@@ -775,4 +777,3 @@ login();
 </script>
 </body>
 </html>
-
